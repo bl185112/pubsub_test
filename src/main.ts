@@ -1,13 +1,22 @@
 import { NestFactory } from '@nestjs/core';
+import { ExpressAdapter } from '@nestjs/platform-express';
+import { createServer } from 'http';
 import { AppModule } from './app.module';
-import listenForMessages from './listenForMessages';
-import publishMessage from './publishMessage';
+import listenForMessages from './gcp/listenForMessages';
+import publishMessage from './gcp/publishMessage';
+import * as express from 'express'
+import 'dotenv/config'
 
+const bootstrap = async () => {
+  const server = express()
 
-async function bootstrap() {
-  const app1 = await NestFactory.create(AppModule);
-  await app1.listen(3000, publishMessage);
-  // const app2 = await NestFactory.create(AppModule);
-  // await app2.listen(3001, listenForMessages);
+  const app = await NestFactory.create(
+    AppModule,
+    new ExpressAdapter(server)
+  );
+  await app.init();
+  
+  createServer(server).listen(3000, listenForMessages)
 }
-bootstrap();
+
+bootstrap()
